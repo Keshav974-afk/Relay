@@ -7,8 +7,9 @@ import logging
 import sys
 from telethon import TelegramClient, events
 from telethon.tl.types import Message
+from telethon.sessions import StringSession
 
-from config import API_ID, API_HASH, SESSION_NAME, OWNER_ID, COMMAND_PREFIX
+from config import API_ID, API_HASH, SESSION_NAME, SESSION_SECRET, OWNER_ID, COMMAND_PREFIX
 from storage import ConfigStorage, MappingsStorage, RequestsStorage
 from relay import process_relay_request, handle_edit
 
@@ -26,7 +27,12 @@ if not API_ID or not API_HASH:
 if not OWNER_ID:
     logger.warning("OWNER_ID not set - commands will be restricted")
 
-client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
+if SESSION_SECRET:
+    logger.info("Using StringSession from SESSION_SECRET")
+    client = TelegramClient(StringSession(SESSION_SECRET), API_ID, API_HASH)
+else:
+    logger.info("Using file-based session (requires interactive login)")
+    client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
 
 _tracked_bot_chats: set = set()
 

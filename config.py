@@ -10,6 +10,7 @@ load_dotenv()
 API_ID = int(os.getenv("API_ID", "0"))
 API_HASH = os.getenv("API_HASH", "")
 SESSION_NAME = os.getenv("SESSION_NAME", "userbot_session")
+SESSION_SECRET = os.getenv("SESSION_SECRET", "")
 OWNER_ID = int(os.getenv("OWNER_ID", "0"))
 
 TIMEOUT_SECONDS = int(os.getenv("TIMEOUT_SECONDS", "60"))

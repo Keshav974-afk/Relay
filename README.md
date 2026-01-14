@@ -28,22 +28,31 @@ Set the following secrets/environment variables:
 | `API_ID` | Yes | Your Telegram API ID |
 | `API_HASH` | Yes | Your Telegram API Hash |
 | `OWNER_ID` | Yes | Your Telegram user ID |
-| `SESSION_NAME` | No | Session file name (default: `userbot_session`) |
+| `SESSION_SECRET` | Yes | Session string from auth.py (see below) |
 | `TIMEOUT_SECONDS` | No | Max wait for bot reply (default: 60) |
 | `REPLY_IDLE_SECONDS` | No | Idle window for reply collection (default: 2) |
 | `EDIT_DEBOUNCE_SECONDS` | No | Debounce time for edits (default: 1.5) |
 | `CLEANUP_HOURS` | No | Hours to keep mappings (default: 24) |
 
-### 2. First Run - Authentication
+### 2. Generate Session String (One-Time Setup)
 
-On first run, Telethon will prompt for:
-1. Your phone number (with country code, e.g., +1234567890)
-2. The verification code sent to your Telegram
-3. 2FA password (if enabled)
+Run the authentication script in the Shell to generate your session string:
 
-This creates a session file that persists your login.
+```bash
+python auth.py
+```
+
+This will:
+1. Ask for your phone number (with country code, e.g., +1234567890)
+2. Send a verification code to your Telegram
+3. Ask for 2FA password (if enabled)
+4. Output a session string
+
+Copy the session string and add it as `SESSION_SECRET` in your secrets.
 
 ### 3. Run the Userbot
+
+Once `SESSION_SECRET` is set, the userbot will start automatically:
 
 ```bash
 python main.py
@@ -106,6 +115,7 @@ All data is stored in the `data/` folder as JSON files:
 ├── config.py      # Configuration and environment
 ├── storage.py     # JSON database layer
 ├── relay.py       # Relay and mirroring logic
+├── auth.py        # One-time session generator
 ├── data/          # JSON storage files
 │   ├── config.json
 │   ├── mappings.json
