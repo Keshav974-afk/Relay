@@ -5,6 +5,7 @@ Relays /strco messages to target bots and mirrors responses.
 import asyncio
 import logging
 import sys
+import time as time_module
 from telethon import TelegramClient, events
 from telethon.tl.types import Message
 from telethon.sessions import StringSession
@@ -35,6 +36,8 @@ else:
     client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
 
 _tracked_bot_chats: set = set()
+_user_cooldowns: dict = {}
+COOLDOWN_SECONDS = 5
 
 
 def parse_command(text: str) -> tuple:
@@ -56,8 +59,15 @@ async def is_owner(user_id: int) -> bool:
 async def process_strco_command(event, message: Message, sender_id: int):
     """Process /strco relay command."""
     if not await ConfigStorage.is_allowed(sender_id):
-        await event.respond("Not allowed.")
         return
+    
+    now = time_module.time()
+    cooldown_key = f"{sender_id}_{event.chat_id}"
+    if cooldown_key in _user_cooldowns:
+        if now - _user_cooldowns[cooldown_key] < COOLDOWN_SECONDS:
+            logger.debug(f"Cooldown active for user {sender_id}, ignoring")
+            return
+    _user_cooldowns[cooldown_key] = now
     
     logger.info(f"Processing /strco relay from user {sender_id} in chat {event.chat_id}")
     
