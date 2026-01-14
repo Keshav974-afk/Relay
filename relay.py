@@ -158,16 +158,21 @@ async def mirror_message(client: TelegramClient, origin_chat_id: int,
     Returns the mirrored message ID.
     """
     try:
+        try:
+            origin_entity = await client.get_entity(origin_chat_id)
+        except Exception:
+            origin_entity = await client.get_input_entity(origin_chat_id)
+        
         if is_media_message(bot_message):
             mirrored = await client.send_file(
-                origin_chat_id,
+                origin_entity,
                 bot_message.media,
                 caption=bot_message.message or ""
             )
             msg_type = get_media_type(bot_message)
         else:
             mirrored = await client.send_message(
-                origin_chat_id,
+                origin_entity,
                 bot_message.text or bot_message.message
             )
             msg_type = "text"
@@ -226,16 +231,21 @@ async def handle_edit(client: TelegramClient, edited_message: Message,
         origin_chat_id = mapping["origin_chat_id"]
         mirrored_msg_id = mapping["mirrored_msg_id"]
         
+        try:
+            origin_entity = await client.get_entity(origin_chat_id)
+        except Exception:
+            origin_entity = await client.get_input_entity(origin_chat_id)
+        
         if is_media_message(edited_message):
             if mapping.get("type") in ["photo", "video", "document", "voice", "audio"]:
                 await client.edit_message(
-                    origin_chat_id,
+                    origin_entity,
                     mirrored_msg_id,
                     text=edited_message.message or ""
                 )
             else:
                 new_mirrored = await client.send_file(
-                    origin_chat_id,
+                    origin_entity,
                     edited_message.media,
                     caption=f"(updated media)\n{edited_message.message or ''}"
                 )
@@ -248,7 +258,7 @@ async def handle_edit(client: TelegramClient, edited_message: Message,
                 )
         else:
             await client.edit_message(
-                origin_chat_id,
+                origin_entity,
                 mirrored_msg_id,
                 text=edited_message.text or edited_message.message
             )
@@ -273,10 +283,18 @@ async def process_relay_request(client: TelegramClient, origin_message: Message,
     3. Collect replies
     4. Mirror replies to origin
     """
+    try:
+        origin_entity = await client.get_entity(origin_chat_id)
+    except Exception:
+        try:
+            origin_entity = await client.get_input_entity(origin_chat_id)
+        except Exception:
+            origin_entity = origin_chat_id
+    
     target_bot = await ConfigStorage.get_chat_bot(origin_chat_id)
     if not target_bot:
         await client.send_message(
-            origin_chat_id,
+            origin_entity,
             "No target bot configured. Use /setstrco @BotUsername or /setstrcoglobal @BotUsername"
         )
         return False
@@ -285,7 +303,7 @@ async def process_relay_request(client: TelegramClient, origin_message: Message,
     
     sent = await relay_message(client, origin_message, target_bot)
     if not sent:
-        await client.send_message(origin_chat_id, "Failed to relay message to bot.")
+        await client.send_message(origin_entity, "Failed to relay message to bot.")
         return False
     
     try:
@@ -307,7 +325,7 @@ async def process_relay_request(client: TelegramClient, origin_message: Message,
     replies = await collect_bot_replies(client, bot_entity, sent.id, settings)
     
     if not replies:
-        await client.send_message(origin_chat_id, "No response from bot (timeout).")
+        await client.send_message(origin_entity, "No response from bot (timeout).")
     else:
         for reply in replies:
             await mirror_message(client, origin_chat_id, reply, bot_chat_id)
