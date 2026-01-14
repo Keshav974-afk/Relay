@@ -79,7 +79,8 @@ async def process_strco_command(event, message: Message, sender_id: int):
         except Exception as e:
             logger.warning(f"Could not track bot chat: {e}")
     
-    await process_relay_request(client, message, event.chat_id)
+    origin_chat = await event.get_chat()
+    await process_relay_request(client, message, event.chat_id, origin_chat)
 
 
 @client.on(events.NewMessage(outgoing=True))

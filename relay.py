@@ -152,16 +152,17 @@ async def collect_bot_replies(client: TelegramClient, bot_entity,
 
 
 async def mirror_message(client: TelegramClient, origin_chat_id: int,
-                         bot_message: Message, bot_chat_id: int) -> Optional[int]:
+                         bot_message: Message, bot_chat_id: int, origin_entity=None) -> Optional[int]:
     """
     Mirror a bot's reply message to the origin chat.
     Returns the mirrored message ID.
     """
     try:
-        try:
-            origin_entity = await client.get_entity(origin_chat_id)
-        except Exception:
-            origin_entity = await client.get_input_entity(origin_chat_id)
+        if origin_entity is None:
+            try:
+                origin_entity = await client.get_entity(origin_chat_id)
+            except Exception:
+                origin_entity = await client.get_input_entity(origin_chat_id)
         
         if is_media_message(bot_message):
             mirrored = await client.send_file(
@@ -275,7 +276,7 @@ async def handle_edit(client: TelegramClient, edited_message: Message,
 
 
 async def process_relay_request(client: TelegramClient, origin_message: Message,
-                                origin_chat_id: int) -> bool:
+                                origin_chat_id: int, origin_entity=None) -> bool:
     """
     Full relay workflow:
     1. Get target bot
@@ -283,13 +284,14 @@ async def process_relay_request(client: TelegramClient, origin_message: Message,
     3. Collect replies
     4. Mirror replies to origin
     """
-    try:
-        origin_entity = await client.get_entity(origin_chat_id)
-    except Exception:
+    if origin_entity is None:
         try:
-            origin_entity = await client.get_input_entity(origin_chat_id)
+            origin_entity = await client.get_entity(origin_chat_id)
         except Exception:
-            origin_entity = origin_chat_id
+            try:
+                origin_entity = await client.get_input_entity(origin_chat_id)
+            except Exception:
+                origin_entity = origin_chat_id
     
     target_bot = await ConfigStorage.get_chat_bot(origin_chat_id)
     if not target_bot:
@@ -328,7 +330,7 @@ async def process_relay_request(client: TelegramClient, origin_message: Message,
         await client.send_message(origin_entity, "No response from bot (timeout).")
     else:
         for reply in replies:
-            await mirror_message(client, origin_chat_id, reply, bot_chat_id)
+            await mirror_message(client, origin_chat_id, reply, bot_chat_id, origin_entity)
     
     await RequestsStorage.remove_request(origin_chat_id)
     return True
