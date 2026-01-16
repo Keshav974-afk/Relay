@@ -1,21 +1,13 @@
 """
 One-time authentication script to generate a session string.
-Run this once to get your SESSION_SECRET, then add it to secrets.
+Run this once to get your SESSION_SECRET, then update config.py.
 """
 import asyncio
-import os
-from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 
-load_dotenv()
-
-API_ID = int(os.getenv("API_ID", "0"))
-API_HASH = os.getenv("API_HASH", "")
-
-if not API_ID or not API_HASH:
-    print("ERROR: API_ID and API_HASH must be set in environment variables")
-    exit(1)
+API_ID = 25458518
+API_HASH = "e0a73353c37306f9fa68b1e2a4ba6eab"
 
 async def main():
     print("=" * 50)
@@ -33,11 +25,11 @@ async def main():
     me = await client.get_me()
     print(f"\nLogged in as: {me.first_name} (@{me.username}) [ID: {me.id}]")
     print("\n" + "=" * 50)
-    print("SESSION STRING (add this as SESSION_SECRET):")
+    print("SESSION STRING (update this in config.py):")
     print("=" * 50)
     print(f"\n{session_string}\n")
     print("=" * 50)
-    print("\nCopy the session string above and add it as SESSION_SECRET in your secrets.")
+    print("\nCopy the session string above and update SESSION_SECRET in config.py.")
     print("Then the userbot will start automatically without requiring login.\n")
     
     await client.disconnect()
