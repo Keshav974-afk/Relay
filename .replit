@@ -30,5 +30,14 @@ args = "python main.py"
 [workflows.workflow.metadata]
 outputType = "console"
 
+[[workflows.workflow]]
+name = "Auth"
+mode = "sequential"
+author = 41534048
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 auth.py"
+
 [deployment]
 deploymentTarget = "cloudrun"
