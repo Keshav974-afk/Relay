@@ -44,6 +44,7 @@ Thumbs.db
 
 # Data files (keep structure, ignore contents)
 data/*.json
+!data/.gitkeep
 
 # Logs
 *.log
